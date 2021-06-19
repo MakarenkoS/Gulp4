@@ -1,0 +1,21 @@
+$fontSize: 10;
+
+body {
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+span {
+    font-size: 20px;
+    @media(max-width: 767px) {
+        font-size: 16px;
+    }
+}
+
+div {
+    font-size: 30px;
+    @media (max-width: 767px) {
+        font-size: 20px;
+    }
+}

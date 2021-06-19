@@ -1,0 +1,25 @@
+body {
+  font-size: 15px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+          flex-direction: column;
+}
+
+span {
+  font-size: 20px;
+}
+
+div {
+  font-size: 30px;
+}
+
+@media (max-width: 767px) {
+  span {
+    font-size: 16px;
+  }
+
+  div {
+    font-size: 20px;
+  }
+}
