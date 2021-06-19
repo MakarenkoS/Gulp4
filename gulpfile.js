@@ -12,7 +12,7 @@ let path = {
 
     src: {
         html: [sourceFolder + "/*.html", "!" + sourceFolder + "/_*.html"],
-        css: sourceFolder + "/scss/style.scss",
+        css: sourceFolder + "/scss/**/*.scss",
         js: sourceFolder + "/js/script.js",
         img: sourceFolder + "/img/**/*.{jpg, png, svg, git, ico, webp}",
         fonts: sourceFolder + "/fonts/*.ttf"
@@ -31,7 +31,7 @@ let path = {
 
 // ****************************************Variables
 
-let {src, dest} = require("gulp"),
+let { src, dest } = require("gulp"),
     gulp = require("gulp"),
     browser_sync = require("browser-sync").create(),
     file_include = require("gulp-file-include"),
@@ -40,7 +40,9 @@ let {src, dest} = require("gulp"),
     autoprefixer = require('gulp-autoprefixer'),
     group_media = require('gulp-group-css-media-queries'),
     clean_css = require('gulp-clean-css'),
-    gulp_rename = require('gulp-rename')
+    gulp_rename = require('gulp-rename'),
+    concat = require('gulp-concat'),
+    uglify = require('gulp-uglify-es').default;
 
 // ****************************************
 
@@ -65,6 +67,22 @@ function html() {
 
 // ****************************************
 
+function js() {
+    return src(path.src.js)
+        .pipe(file_include())
+        .pipe(dest(path.build.js))
+        .pipe(uglify())
+        .pipe(
+            gulp_rename({
+                extname: ".min.js"
+            })
+        )
+        .pipe(dest(path.build.js))
+        .pipe(browser_sync.stream())
+}
+
+// ****************************************
+
 function css() {
     return src(path.src.css)
         .pipe(scss({
@@ -78,6 +96,7 @@ function css() {
                 cascade: true
             })
         )
+        .pipe(concat("styles.css"))
         .pipe(dest(path.build.css))
         .pipe(
             clean_css()
@@ -94,22 +113,24 @@ function css() {
 // ****************************************
 
 function watcher(params) {
-    gulp.watch([path.watch.html], html)
-    gulp.watch([path.watch.css], css)
+    gulp.watch([path.watch.html], html);
+    gulp.watch([path.watch.css], css);
+    gulp.watch([path.watch.js], js);
 }
 
 // ****************************************
 
 function clean(params) {
     return del(path.clean)
-}   
+}
 
 
 
-let build = gulp.series(clean, gulp.parallel(html, css));
+let build = gulp.series(clean, gulp.parallel(js, html, css));
 let watch = gulp.parallel(build, watcher, browserSync);
 
 
+exports.js = js;
 exports.css = css;
 exports.html = html;
 exports.build = build;
