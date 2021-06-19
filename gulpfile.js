@@ -42,7 +42,12 @@ let { src, dest } = require("gulp"),
     clean_css = require('gulp-clean-css'),
     gulp_rename = require('gulp-rename'),
     concat = require('gulp-concat'),
-    uglify = require('gulp-uglify-es').default;
+    uglify = require('gulp-uglify-es').default,
+    webp = require('gulp-webp'),
+    imagemin = require('gulp-imagemin'),
+    webphtml = require('gulp-webp-html'),
+    svg_sprite = require('gulp-svg-sprite')
+
 
 // ****************************************
 
@@ -61,9 +66,33 @@ function browserSync(params) {
 function html() {
     return src(path.src.html)
         .pipe(file_include())
+        .pipe(webphtml())
         .pipe(dest(path.build.html))
         .pipe(browser_sync.stream())
 }
+
+// ****************************************
+
+function img() {
+    return src(path.src.img)
+        .pipe(webp({
+                quality: 70
+            })
+        )
+        .pipe(dest(path.build.img))
+        .pipe(src(path.src.img))
+        .pipe(
+            imagemin({
+                progressive: true,
+                svgoPlugins: [{ removeViewBox: false }],
+                interlaced: true,
+                optimizationLevel: 3
+            })
+        )
+        .pipe(dest(path.build.img))
+        .pipe(browser_sync.stream())
+}
+
 
 // ****************************************
 
@@ -97,6 +126,7 @@ function css() {
             })
         )
         .pipe(concat("styles.css"))
+       
         .pipe(dest(path.build.css))
         .pipe(
             clean_css()
@@ -116,8 +146,25 @@ function watcher(params) {
     gulp.watch([path.watch.html], html);
     gulp.watch([path.watch.css], css);
     gulp.watch([path.watch.js], js);
+    gulp.watch([path.watch.img], img);
 }
 
+
+// ****************************************
+
+gulp.task('svg', () => {
+    return gulp.src([sourceFolder + '/iconsprite/*.svg'])
+        .pipe(svg_sprite({
+            mode: {
+                stack: {
+                    sprite: '../icons/icons.svg',
+                    example: true
+                }
+            }
+        }
+        ))
+        .pipe(dest(path.build.img))
+})
 // ****************************************
 
 function clean(params) {
@@ -125,11 +172,11 @@ function clean(params) {
 }
 
 
-
-let build = gulp.series(clean, gulp.parallel(js, html, css));
+let build = gulp.series(clean, gulp.parallel(js, html, css, img));
 let watch = gulp.parallel(build, watcher, browserSync);
 
 
+exports.img = img;
 exports.js = js;
 exports.css = css;
 exports.html = html;
